@@ -22,8 +22,8 @@ const features = [
 
 export function HowToUse() {
   return (
-    <section className="w-full mt-16 md:mt-24">
-        <div className="text-center mb-8 md:mb-12">
+    <section className="w-full mt-16 md:mt-24 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div className="text-center mb-8 md:mb-12 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200">
           <div className="inline-flex items-center justify-center gap-3 mb-2">
              <Lightbulb className="text-primary w-8 h-8" />
              <h2 className="text-3xl sm:text-4xl md:text-5xl font-headline font-bold text-foreground tracking-wide">
@@ -37,7 +37,7 @@ export function HowToUse() {
 
         <div className="grid md:grid-cols-3 gap-6">
             {features.map((feature, index) => (
-                 <Card key={index} className="bg-card/50 text-center">
+                 <Card key={index} className="bg-card/50 text-center animate-in fade-in slide-in-from-bottom-12 duration-700" style={{ animationDelay: `${300 + index * 150}ms`}}>
                     <CardHeader className="items-center">
                         <div className="p-4 bg-primary/10 rounded-full mb-2">
                            {feature.icon}
@@ -46,6 +46,7 @@ export function HowToUse() {
                     </CardHeader>
                     <CardContent>
                         <p className="font-body text-muted-foreground">{feature.description}</p>
+
                     </CardContent>
                 </Card>
             ))}
