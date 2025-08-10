@@ -23,7 +23,7 @@ const faceShapes = ['Oval', 'Round', 'Square', 'Heart', 'Diamond', 'Long'];
 const bodyShapes = ['Apple', 'Pear', 'Rectangle', 'Hourglass', 'Inverted Triangle'];
 
 export function StyleGuide() {
-  const [state, formAction] = useActionState(suggestOutfitAction, initialState);
+  const [manualState, manualFormAction] = useActionState(suggestOutfitAction, initialState);
   const [photoState, photoFormAction] = useActionState(suggestOutfitFromPhotoAction, initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('manual');
@@ -44,22 +44,26 @@ export function StyleGuide() {
     }
   };
 
-  const activeState = activeTab === 'photo' ? photoState : state;
+  const activeState = activeTab === 'photo' ? photoState : manualState;
   
   useEffect(() => {
-    if (state.status === 'success' || photoState.status === 'success') {
+    if (manualState.status === 'success' || photoState.status === 'success') {
       toast({
         title: "Style Guide Ready!",
         description: "Your personalized suggestions are here.",
       });
-      formRef.current?.reset();
-      photoFormRef.current?.reset();
-      setImagePreview(null);
-    } else if (state.status === 'error' && state.message) {
+      if (manualState.status === 'success') {
+        formRef.current?.reset();
+      }
+      if (photoState.status === 'success') {
+        photoFormRef.current?.reset();
+        setImagePreview(null);
+      }
+    } else if (manualState.status === 'error' && manualState.message) {
       toast({
         variant: "destructive",
         title: "Oops! Something went wrong.",
-        description: state.message,
+        description: manualState.message,
       });
     } else if (photoState.status === 'error' && photoState.message) {
       toast({
@@ -68,7 +72,7 @@ export function StyleGuide() {
         description: photoState.message,
       });
     }
-  }, [state, photoState, toast]);
+  }, [manualState, photoState, toast]);
 
   return (
     <Card className="w-full">
@@ -91,7 +95,7 @@ export function StyleGuide() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="manual" className="mt-6">
-            <form ref={formRef} action={formAction} className="space-y-4">
+            <form ref={formRef} action={manualFormAction} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="skinTone">Skin Tone</Label>
