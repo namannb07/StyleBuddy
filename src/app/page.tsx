@@ -1,4 +1,5 @@
 import { FeatureTabs } from "@/components/feature-tabs";
+import { HowToUse } from "@/components/how-to-use";
 import { Sparkles } from "lucide-react";
 
 export default function Home() {
@@ -20,6 +21,7 @@ export default function Home() {
         
         <FeatureTabs />
 
+        <HowToUse />
       </div>
     </main>
   );
