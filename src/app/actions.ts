@@ -3,6 +3,7 @@
 
 import { rateOutfit, type RateOutfitOutput } from '@/ai/flows/rate-outfit';
 import { suggestOutfit, type SuggestOutfitOutput } from '@/ai/flows/suggest-outfit';
+import { suggestOutfitFromPhoto } from '@/ai/flows/suggest-outfit-from-photo';
 import { suggestHairstyle, type SuggestHairstyleOutput } from '@/ai/flows/suggest-hairstyle';
 import { z } from 'zod';
 
@@ -32,6 +33,7 @@ export async function rateOutfitAction(
   prevState: RateOutfitState,
   formData: FormData
 ): Promise<RateOutfitState> {
+  "use server"
   const validatedFields = rateOutfitSchema.safeParse({
     outfitImage: formData.get('outfitImage'),
   });
@@ -76,6 +78,7 @@ export type SuggestOutfitState = {
     skinTone?: string[];
     faceShape?: string[];
     bodyShape?: string[];
+    styleImage?: string[];
   };
 };
 
@@ -83,6 +86,7 @@ export async function suggestOutfitAction(
   prevState: SuggestOutfitState,
   formData: FormData
 ): Promise<SuggestOutfitState> {
+  "use server"
   const validatedFields = suggestOutfitSchema.safeParse({
     skinTone: formData.get('skinTone'),
     faceShape: formData.get('faceShape'),
@@ -99,6 +103,48 @@ export async function suggestOutfitAction(
 
   try {
     const result = await suggestOutfit(validatedFields.data);
+    return {
+      status: 'success',
+      message: 'Style guide generated!',
+      result,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      status: 'error',
+      message: 'An unexpected error occurred. Please try again.',
+    };
+  }
+}
+
+// Style Guide from Photo Action
+const suggestOutfitFromPhotoSchema = z.object({
+  styleImage: z
+    .instanceof(File)
+    .refine((file) => file.size > 0, 'An image is required.')
+    .refine((file) => file.type.startsWith('image/'), 'Only image files are allowed.'),
+});
+
+export async function suggestOutfitFromPhotoAction(
+  prevState: SuggestOutfitState,
+  formData: FormData
+): Promise<SuggestOutfitState> {
+  "use server"
+  const validatedFields = suggestOutfitFromPhotoSchema.safeParse({
+    styleImage: formData.get('styleImage'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      status: 'error',
+      message: 'Invalid form data.',
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  try {
+    const photoDataUri = await fileToDataUri(validatedFields.data.styleImage);
+    const result = await suggestOutfitFromPhoto({ photoDataUri });
     return {
       status: 'success',
       message: 'Style guide generated!',
@@ -138,6 +184,7 @@ export async function suggestHairstyleAction(
   prevState: SuggestHairstyleState,
   formData: FormData
 ): Promise<SuggestHairstyleState> {
+  "use server"
   const validatedFields = suggestHairstyleSchema.safeParse({
     faceImage: formData.get('faceImage'),
     gender: formData.get('gender'),

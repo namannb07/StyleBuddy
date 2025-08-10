@@ -10,6 +10,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { SuggestOutfitOutputSchema } from './schemas';
+
 
 const SuggestOutfitInputSchema = z.object({
   skinTone: z
@@ -19,11 +21,6 @@ const SuggestOutfitInputSchema = z.object({
   bodyShape: z.string().describe('The user provided body shape (e.g., apple, pear, rectangle).'),
 });
 export type SuggestOutfitInput = z.infer<typeof SuggestOutfitInputSchema>;
-
-const SuggestOutfitOutputSchema = z.object({
-  outfitSuggestion: z.string().describe('Outfit suggestions based on the provided characteristics.'),
-  colorSuggestion: z.string().describe('Color suggestions based on the provided characteristics.'),
-});
 export type SuggestOutfitOutput = z.infer<typeof SuggestOutfitOutputSchema>;
 
 export async function suggestOutfit(input: SuggestOutfitInput): Promise<SuggestOutfitOutput> {
