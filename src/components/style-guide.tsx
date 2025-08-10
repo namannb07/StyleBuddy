@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { suggestOutfitAction, type SuggestOutfitState } from '@/app/actions';
 import { SubmitButton } from '@/components/submit-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Wand, Palette, Shirt, Upload, Edit } from 'lucide-react';
+import { Wand, Palette, Shirt, Upload, Edit, Glasses, CaseUpper } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -26,9 +26,7 @@ export function StyleGuide() {
   const [state, formAction] = useActionState(suggestOutfitAction, initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
-  const manualFormRef = useRef<HTMLFormElement>(null);
-  const photoFormRef = useRef<HTMLFormElement>(null);
-
+  const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,8 +46,7 @@ export function StyleGuide() {
         title: "Style Guide Ready!",
         description: "Your personalized suggestions are here.",
       });
-      manualFormRef.current?.reset();
-      photoFormRef.current?.reset();
+      formRef.current?.reset();
       setImagePreview(null);
 
     } else if (state.status === 'error' && state.message) {
@@ -72,86 +69,91 @@ export function StyleGuide() {
       <CardContent className="space-y-6">
         <Tabs defaultValue="manual" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-primary/10 p-1 h-auto rounded-lg">
-             <TabsTrigger value="manual" className="py-2.5 text-sm md:text-base flex items-center gap-2 rounded-md">
+             <TabsTrigger value="manual" className="py-2.5 text-sm md:text-base flex items-center gap-2 rounded-md transition-all duration-300">
                 <Edit className="w-5 h-5" />
                 <span>Manual Input</span>
             </TabsTrigger>
-            <TabsTrigger value="photo" className="py-2.5 text-sm md:text-base flex items-center gap-2 rounded-md">
+            <TabsTrigger value="photo" className="py-2.5 text-sm md:text-base flex items-center gap-2 rounded-md transition-all duration-300">
                 <Upload className="w-5 h-5" />
                 <span>Upload Photo</span>
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="manual" className="mt-6">
-            <form ref={manualFormRef} action={formAction} className="space-y-4">
-              <input type="hidden" name="submissionType" value="manual" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form ref={formRef} action={formAction}>
+            <TabsContent value="manual" className="mt-6 animate-in fade-in-50 zoom-in-95 data-[state=inactive]:hidden">
+                <input type="hidden" name="submissionType" value="manual" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="skinTone">Skin Tone</Label>
+                    <Select name="skinTone" required>
+                      <SelectTrigger id="skinTone"><SelectValue placeholder="Select your skin tone" /></SelectTrigger>
+                      <SelectContent>{skinTones.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                    </Select>
+                    {state.errors?.skinTone && (
+                      <p className="text-sm text-destructive">{state.errors.skinTone[0]}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="faceShape">Face Shape</Label>
+                    <Select name="faceShape" required>
+                      <SelectTrigger id="faceShape"><SelectValue placeholder="Select your face shape" /></SelectTrigger>
+                      <SelectContent>{faceShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                    {state.errors?.faceShape && (
+                      <p className="text-sm text-destructive">{state.errors.faceShape[0]}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bodyShape">Body Shape</Label>
+                    <Select name="bodyShape" required>
+                      <SelectTrigger id="bodyShape"><SelectValue placeholder="Select your body shape" /></SelectTrigger>
+                      <SelectContent>{bodyShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                    {state.errors?.bodyShape && (
+                      <p className="text-sm text-destructive">{state.errors.bodyShape[0]}</p>
+                    )}
+                  </div>
+                </div>
+                <SubmitButton className="w-full mt-4" pendingText="Generating...">Get My Style Guide</SubmitButton>
+            </TabsContent>
+            <TabsContent value="photo" className="mt-6 animate-in fade-in-50 zoom-in-95 data-[state=inactive]:hidden">
+                <input type="hidden" name="submissionType" value="photo" />
                 <div className="space-y-2">
-                  <Label htmlFor="skinTone">Skin Tone</Label>
-                  <Select name="skinTone" required>
-                    <SelectTrigger id="skinTone"><SelectValue placeholder="Select your skin tone" /></SelectTrigger>
-                    <SelectContent>{skinTones.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                  </Select>
-                   {state.errors?.skinTone && (
-                    <p className="text-sm text-destructive">{state.errors.skinTone[0]}</p>
+                  <Label htmlFor="styleImage">Upload Your Photo</Label>
+                  <Input id="styleImage" name="styleImage" type="file" accept="image/*" required onChange={handleImageChange} />
+                  {state.errors?.styleImage && (
+                    <p className="text-sm text-destructive">{state.errors.styleImage[0]}</p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="faceShape">Face Shape</Label>
-                  <Select name="faceShape" required>
-                    <SelectTrigger id="faceShape"><SelectValue placeholder="Select your face shape" /></SelectTrigger>
-                    <SelectContent>{faceShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                  </Select>
-                   {state.errors?.faceShape && (
-                    <p className="text-sm text-destructive">{state.errors.faceShape[0]}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bodyShape">Body Shape</Label>
-                  <Select name="bodyShape" required>
-                    <SelectTrigger id="bodyShape"><SelectValue placeholder="Select your body shape" /></SelectTrigger>
-                    <SelectContent>{bodyShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                  </Select>
-                   {state.errors?.bodyShape && (
-                    <p className="text-sm text-destructive">{state.errors.bodyShape[0]}</p>
-                  )}
-                </div>
-              </div>
-              <SubmitButton className="w-full" pendingText="Generating...">Get My Style Guide</SubmitButton>
-            </form>
-          </TabsContent>
-          <TabsContent value="photo" className="mt-6">
-             <form ref={photoFormRef} action={formAction} className="space-y-4">
-              <input type="hidden" name="submissionType" value="photo" />
-              <div className="space-y-2">
-                <Label htmlFor="styleImage">Upload Your Photo</Label>
-                <Input id="styleImage" name="styleImage" type="file" accept="image/*" required onChange={handleImageChange} />
-                {state.errors?.styleImage && (
-                  <p className="text-sm text-destructive">{state.errors.styleImage[0]}</p>
+
+                {imagePreview && (
+                  <div className="relative w-full max-w-sm mx-auto aspect-[3/4] rounded-lg overflow-hidden border-2 border-dashed border-primary/50 mt-4">
+                    <Image src={imagePreview} alt="Style preview" layout="fill" objectFit="cover" />
+                  </div>
                 )}
-              </div>
-
-              {imagePreview && (
-                <div className="relative w-full max-w-sm mx-auto aspect-[3/4] rounded-lg overflow-hidden border-2 border-dashed border-primary/50">
-                  <Image src={imagePreview} alt="Style preview" layout="fill" objectFit="cover" />
-                </div>
-              )}
-
-              <SubmitButton className="w-full" pendingText="Analyzing...">Get My Style Guide</SubmitButton>
-            </form>
-          </TabsContent>
+                <SubmitButton className="w-full mt-4" pendingText="Analyzing...">Get My Style Guide</SubmitButton>
+            </TabsContent>
+          </form>
         </Tabs>
 
         {(state.status === 'success' && state.result) && (
-          <div className="grid md:grid-cols-2 gap-4 animate-in fade-in-50 pt-4">
+          <div className="space-y-6 animate-in fade-in-50 pt-4">
             <Card className="bg-primary/5">
               <CardHeader>
                  <div className="flex items-center gap-2">
                     <Palette className="w-6 h-6 text-primary" />
-                    <CardTitle className="font-headline text-xl">Color Suggestions</CardTitle>
+                    <CardTitle className="font-headline text-xl">Color Palette</CardTitle>
                  </div>
+                 <CardDescription>Colors that will complement your features.</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="font-body">{state.result.colorSuggestion}</p>
+                <div className="flex flex-wrap gap-2">
+                  {state.result.colorPalette.map((color, index) => (
+                    <div key={index} className="flex items-center gap-2 font-mono text-sm">
+                      <div className="w-8 h-8 rounded-full border-2 border-white/50 shadow-md" style={{ backgroundColor: color }} />
+                      <span>{color}</span>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
             <Card className="bg-primary/5">
@@ -160,9 +162,30 @@ export function StyleGuide() {
                     <Shirt className="w-6 h-6 text-primary" />
                     <CardTitle className="font-headline text-xl">Outfit Suggestions</CardTitle>
                  </div>
+                 <CardDescription>A complete look tailored just for you.</CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className="font-body">{state.result.outfitSuggestion}</p>
+              <CardContent className="space-y-4 font-body">
+                <div className="flex items-start gap-3">
+                    <div className="p-2 bg-primary/10 rounded-full mt-1"><CaseUpper className="w-4 h-4 text-primary" /></div>
+                    <div>
+                        <h4 className="font-semibold text-foreground">Top</h4>
+                        <p className="text-muted-foreground">{state.result.outfitSuggestion.top}</p>
+                    </div>
+                </div>
+                 <div className="flex items-start gap-3">
+                    <div className="p-2 bg-primary/10 rounded-full mt-1"><CaseUpper className="w-4 h-4 text-primary -scale-y-100" /></div>
+                    <div>
+                        <h4 className="font-semibold text-foreground">Bottom</h4>
+                        <p className="text-muted-foreground">{state.result.outfitSuggestion.bottom}</p>
+                    </div>
+                </div>
+                 <div className="flex items-start gap-3">
+                    <div className="p-2 bg-primary/10 rounded-full mt-1"><Glasses className="w-4 h-4 text-primary" /></div>
+                    <div>
+                        <h4 className="font-semibold text-foreground">Wearables</h4>
+                        <p className="text-muted-foreground">{state.result.outfitSuggestion.wearables}</p>
+                    </div>
+                </div>
               </CardContent>
             </Card>
           </div>

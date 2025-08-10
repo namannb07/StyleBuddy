@@ -35,7 +35,8 @@ const prompt = ai.definePrompt({
 
 Photo: {{media url=photoDataUri}}
 
-Output your response by suggesting an outfit and a color combination for this person.
+Provide a color palette with 5 hex codes.
+Also, provide outfit suggestions broken down into top, bottom, and wearables (e.g., sunglasses, watch).
 `,
 });
 
