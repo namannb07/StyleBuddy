@@ -72,9 +72,9 @@ const suggestOutfitSchema = z.object({
 
 const suggestOutfitFromPhotoSchema = z.object({
   styleImage: z
-    .any()
-    .refine((file) => file instanceof File && file.size > 0, 'An image is required.')
-    .refine((file) => file instanceof File && file.type.startsWith('image/'), 'Only image files are allowed.'),
+    .instanceof(File)
+    .refine((file) => file.size > 0, 'An image is required.')
+    .refine((file) => file.type.startsWith('image/'), 'Only image files are allowed.'),
 });
 
 export type SuggestOutfitState = {
