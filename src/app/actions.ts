@@ -68,6 +68,9 @@ const suggestOutfitSchema = z.object({
   skinTone: z.string().min(1, 'Skin tone is required.'),
   faceShape: z.string().min(1, 'Face shape is required.'),
   bodyShape: z.string().min(1, 'Body shape is required.'),
+  gender: z.enum(['male', 'female'], {
+    required_error: 'Please select a gender.',
+  }),
 });
 
 const suggestOutfitFromPhotoSchema = z.object({
@@ -85,6 +88,7 @@ export type SuggestOutfitState = {
     skinTone?: string[];
     faceShape?: string[];
     bodyShape?: string[];
+    gender?: string[];
     styleImage?: string[];
     submissionType?: string[];
   };
@@ -103,6 +107,7 @@ export async function suggestOutfitAction(
       skinTone: formData.get('skinTone'),
       faceShape: formData.get('faceShape'),
       bodyShape: formData.get('bodyShape'),
+      gender: formData.get('gender'),
     });
 
     if (!validatedFields.success) {

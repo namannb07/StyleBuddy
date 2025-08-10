@@ -13,6 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Wand, Palette, Shirt, Upload, Edit, Glasses, CaseUpper } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 const initialState: SuggestOutfitState = {
   status: 'initial',
@@ -84,35 +85,53 @@ export function StyleGuide() {
           </TabsList>
             <input type="hidden" name="submissionType" value={activeTab} />
             <TabsContent value="manual" className="mt-6 animate-in fade-in-50 zoom-in-95 data-[state=inactive]:hidden">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="skinTone">Skin Tone</Label>
-                    <Select name="skinTone" required={activeTab === 'manual'}>
-                      <SelectTrigger id="skinTone"><SelectValue placeholder="Select your skin tone" /></SelectTrigger>
-                      <SelectContent>{skinTones.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                    </Select>
-                    {state.errors?.skinTone && (
-                      <p className="text-sm text-destructive">{state.errors.skinTone[0]}</p>
-                    )}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="skinTone">Skin Tone</Label>
+                      <Select name="skinTone" required={activeTab === 'manual'}>
+                        <SelectTrigger id="skinTone"><SelectValue placeholder="Select your skin tone" /></SelectTrigger>
+                        <SelectContent>{skinTones.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                      </Select>
+                      {state.errors?.skinTone && (
+                        <p className="text-sm text-destructive">{state.errors.skinTone[0]}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="faceShape">Face Shape</Label>
+                      <Select name="faceShape" required={activeTab === 'manual'}>
+                        <SelectTrigger id="faceShape"><SelectValue placeholder="Select your face shape" /></SelectTrigger>
+                        <SelectContent>{faceShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      </Select>
+                       {state.errors?.faceShape && (
+                        <p className="text-sm text-destructive">{state.errors.faceShape[0]}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="bodyShape">Body Shape</Label>
+                      <Select name="bodyShape" required={activeTab === 'manual'}>
+                        <SelectTrigger id="bodyShape"><SelectValue placeholder="Select your body shape" /></SelectTrigger>
+                        <SelectContent>{bodyShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      </Select>
+                       {state.errors?.bodyShape && (
+                        <p className="text-sm text-destructive">{state.errors.bodyShape[0]}</p>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="faceShape">Face Shape</Label>
-                    <Select name="faceShape" required={activeTab === 'manual'}>
-                      <SelectTrigger id="faceShape"><SelectValue placeholder="Select your face shape" /></SelectTrigger>
-                      <SelectContent>{faceShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                    </Select>
-                     {state.errors?.faceShape && (
-                      <p className="text-sm text-destructive">{state.errors.faceShape[0]}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bodyShape">Body Shape</Label>
-                    <Select name="bodyShape" required={activeTab === 'manual'}>
-                      <SelectTrigger id="bodyShape"><SelectValue placeholder="Select your body shape" /></SelectTrigger>
-                      <SelectContent>{bodyShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                    </Select>
-                     {state.errors?.bodyShape && (
-                      <p className="text-sm text-destructive">{state.errors.bodyShape[0]}</p>
+                    <Label>Gender</Label>
+                    <RadioGroup name="gender" required={activeTab === 'manual'} className="flex items-center gap-4 pt-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="female" id="female" />
+                        <Label htmlFor="female" className="font-normal">Female</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="male" id="male" />
+                        <Label htmlFor="male" className="font-normal">Male</Label>
+                      </div>
+                    </RadioGroup>
+                    {state.errors?.gender && (
+                      <p className="text-sm text-destructive">{state.errors.gender[0]}</p>
                     )}
                   </div>
                 </div>
