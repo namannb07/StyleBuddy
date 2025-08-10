@@ -72,9 +72,9 @@ const suggestOutfitSchema = z.object({
 
 const suggestOutfitFromPhotoSchema = z.object({
   styleImage: z
-    .instanceof(File)
-    .refine((file) => file.size > 0, 'An image is required.')
-    .refine((file) => file.type.startsWith('image/'), 'Only image files are allowed.'),
+    .any()
+    .refine((file) => file instanceof File && file.size > 0, 'An image is required.')
+    .refine((file) => file instanceof File && file.type.startsWith('image/'), 'Only image files are allowed.'),
 });
 
 export type SuggestOutfitState = {
@@ -86,6 +86,7 @@ export type SuggestOutfitState = {
     faceShape?: string[];
     bodyShape?: string[];
     styleImage?: string[];
+    submissionType?: string[];
   };
 };
 
@@ -130,7 +131,7 @@ export async function suggestOutfitAction(
       const validatedFields = suggestOutfitFromPhotoSchema.safeParse({
         styleImage: formData.get('styleImage'),
       });
-
+      
       if (!validatedFields.success) {
         return {
           status: 'error',
@@ -159,6 +160,7 @@ export async function suggestOutfitAction(
   return {
       status: 'error',
       message: 'Invalid submission type.',
+      errors: { submissionType: ['Please select a valid submission type.'] }
   };
 }
 

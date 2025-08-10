@@ -25,6 +25,7 @@ const bodyShapes = ['Apple', 'Pear', 'Rectangle', 'Hourglass', 'Inverted Triangl
 export function StyleGuide() {
   const [state, formAction] = useActionState(suggestOutfitAction, initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('manual');
   
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
@@ -37,6 +38,8 @@ export function StyleGuide() {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
     }
   };
 
@@ -67,7 +70,8 @@ export function StyleGuide() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Tabs defaultValue="manual" className="w-full">
+       <form ref={formRef} action={formAction}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-primary/10 p-1 h-auto rounded-lg">
              <TabsTrigger value="manual" className="py-2.5 text-sm md:text-base flex items-center gap-2 rounded-md transition-all duration-300">
                 <Edit className="w-5 h-5" />
@@ -78,13 +82,12 @@ export function StyleGuide() {
                 <span>Upload Photo</span>
             </TabsTrigger>
           </TabsList>
-          <form ref={formRef} action={formAction}>
+            <input type="hidden" name="submissionType" value={activeTab} />
             <TabsContent value="manual" className="mt-6 animate-in fade-in-50 zoom-in-95 data-[state=inactive]:hidden">
-                <input type="hidden" name="submissionType" value="manual" />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="skinTone">Skin Tone</Label>
-                    <Select name="skinTone" required>
+                    <Select name="skinTone" required={activeTab === 'manual'}>
                       <SelectTrigger id="skinTone"><SelectValue placeholder="Select your skin tone" /></SelectTrigger>
                       <SelectContent>{skinTones.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                     </Select>
@@ -94,32 +97,30 @@ export function StyleGuide() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="faceShape">Face Shape</Label>
-                    <Select name="faceShape" required>
+                    <Select name="faceShape" required={activeTab === 'manual'}>
                       <SelectTrigger id="faceShape"><SelectValue placeholder="Select your face shape" /></SelectTrigger>
                       <SelectContent>{faceShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                     </Select>
-                    {state.errors?.faceShape && (
+                     {state.errors?.faceShape && (
                       <p className="text-sm text-destructive">{state.errors.faceShape[0]}</p>
                     )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="bodyShape">Body Shape</Label>
-                    <Select name="bodyShape" required>
+                    <Select name="bodyShape" required={activeTab === 'manual'}>
                       <SelectTrigger id="bodyShape"><SelectValue placeholder="Select your body shape" /></SelectTrigger>
                       <SelectContent>{bodyShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                     </Select>
-                    {state.errors?.bodyShape && (
+                     {state.errors?.bodyShape && (
                       <p className="text-sm text-destructive">{state.errors.bodyShape[0]}</p>
                     )}
                   </div>
                 </div>
-                <SubmitButton className="w-full mt-4" pendingText="Generating...">Get My Style Guide</SubmitButton>
             </TabsContent>
             <TabsContent value="photo" className="mt-6 animate-in fade-in-50 zoom-in-95 data-[state=inactive]:hidden">
-                <input type="hidden" name="submissionType" value="photo" />
                 <div className="space-y-2">
                   <Label htmlFor="styleImage">Upload Your Photo</Label>
-                  <Input id="styleImage" name="styleImage" type="file" accept="image/*" required onChange={handleImageChange} />
+                  <Input id="styleImage" name="styleImage" type="file" accept="image/*" required={activeTab === 'photo'} onChange={handleImageChange} />
                   {state.errors?.styleImage && (
                     <p className="text-sm text-destructive">{state.errors.styleImage[0]}</p>
                   )}
@@ -130,10 +131,10 @@ export function StyleGuide() {
                     <Image src={imagePreview} alt="Style preview" layout="fill" objectFit="cover" />
                   </div>
                 )}
-                <SubmitButton className="w-full mt-4" pendingText="Analyzing...">Get My Style Guide</SubmitButton>
             </TabsContent>
-          </form>
         </Tabs>
+        <SubmitButton className="w-full mt-4" pendingText={activeTab === 'manual' ? "Generating..." : "Analyzing..."}>Get My Style Guide</SubmitButton>
+        </form>
 
         {(state.status === 'success' && state.result) && (
           <div className="space-y-6 animate-in fade-in-50 pt-4">
