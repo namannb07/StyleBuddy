@@ -1,9 +1,8 @@
 // @/components/style-guide.tsx
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useActionState } from 'react';
 import Image from 'next/image';
-import { useFormState } from 'react-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,8 +23,8 @@ const faceShapes = ['Oval', 'Round', 'Square', 'Heart', 'Diamond', 'Long'];
 const bodyShapes = ['Apple', 'Pear', 'Rectangle', 'Hourglass', 'Inverted Triangle'];
 
 export function StyleGuide() {
-  const [state, formAction] = useFormState(suggestOutfitAction, initialState);
-  const [photoState, photoFormAction] = useFormState(suggestOutfitFromPhotoAction, initialState);
+  const [state, formAction] = useActionState(suggestOutfitAction, initialState);
+  const [photoState, photoFormAction] = useActionState(suggestOutfitFromPhotoAction, initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('manual');
 

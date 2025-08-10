@@ -1,8 +1,7 @@
 // @/components/hairstyle-helper.tsx
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useFormState } from 'react-dom';
+import { useEffect, useRef, useState, useActionState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,7 +19,7 @@ const initialState: SuggestHairstyleState = {
 };
 
 export function HairstyleHelper() {
-  const [state, formAction] = useFormState(suggestHairstyleAction, initialState);
+  const [state, formAction] = useActionState(suggestHairstyleAction, initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
