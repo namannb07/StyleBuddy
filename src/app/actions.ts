@@ -70,6 +70,13 @@ const suggestOutfitSchema = z.object({
   bodyShape: z.string().min(1, 'Body shape is required.'),
 });
 
+const suggestOutfitFromPhotoSchema = z.object({
+  styleImage: z
+    .instanceof(File)
+    .refine((file) => file.size > 0, 'An image is required.')
+    .refine((file) => file.type.startsWith('image/'), 'Only image files are allowed.'),
+});
+
 export type SuggestOutfitState = {
   status: 'initial' | 'pending' | 'success' | 'error';
   message?: string;
@@ -87,77 +94,74 @@ export async function suggestOutfitAction(
   formData: FormData
 ): Promise<SuggestOutfitState> {
   "use server"
-  const validatedFields = suggestOutfitSchema.safeParse({
-    skinTone: formData.get('skinTone'),
-    faceShape: formData.get('faceShape'),
-    bodyShape: formData.get('bodyShape'),
-  });
 
-  if (!validatedFields.success) {
-    return {
-      status: 'error',
-      message: 'Invalid form data.',
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
+  const submissionType = formData.get('submissionType');
 
-  try {
-    const result = await suggestOutfit(validatedFields.data);
-    return {
-      status: 'success',
-      message: 'Style guide generated!',
-      result,
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      status: 'error',
-      message: 'An unexpected error occurred. Please try again.',
-    };
+  if (submissionType === 'manual') {
+    const validatedFields = suggestOutfitSchema.safeParse({
+      skinTone: formData.get('skinTone'),
+      faceShape: formData.get('faceShape'),
+      bodyShape: formData.get('bodyShape'),
+    });
+
+    if (!validatedFields.success) {
+      return {
+        status: 'error',
+        message: 'Invalid form data.',
+        errors: validatedFields.error.flatten().fieldErrors,
+      };
+    }
+
+    try {
+      const result = await suggestOutfit(validatedFields.data);
+      return {
+        status: 'success',
+        message: 'Style guide generated!',
+        result,
+      };
+    } catch (error) {
+      console.error(error);
+      return {
+        status: 'error',
+        message: 'An unexpected error occurred. Please try again.',
+      };
+    }
+  } else if (submissionType === 'photo') {
+      const validatedFields = suggestOutfitFromPhotoSchema.safeParse({
+        styleImage: formData.get('styleImage'),
+      });
+
+      if (!validatedFields.success) {
+        return {
+          status: 'error',
+          message: 'Invalid form data.',
+          errors: validatedFields.error.flatten().fieldErrors,
+        };
+      }
+
+      try {
+        const photoDataUri = await fileToDataUri(validatedFields.data.styleImage);
+        const result = await suggestOutfitFromPhoto({ photoDataUri });
+        return {
+          status: 'success',
+          message: 'Style guide generated!',
+          result,
+        };
+      } catch (error) {
+        console.error(error);
+        return {
+          status: 'error',
+          message: 'An unexpected error occurred. Please try again.',
+        };
+      }
   }
+  
+  return {
+      status: 'error',
+      message: 'Invalid submission type.',
+  };
 }
 
-// Style Guide from Photo Action
-const suggestOutfitFromPhotoSchema = z.object({
-  styleImage: z
-    .instanceof(File)
-    .refine((file) => file.size > 0, 'An image is required.')
-    .refine((file) => file.type.startsWith('image/'), 'Only image files are allowed.'),
-});
-
-export async function suggestOutfitFromPhotoAction(
-  prevState: SuggestOutfitState,
-  formData: FormData
-): Promise<SuggestOutfitState> {
-  "use server"
-  const validatedFields = suggestOutfitFromPhotoSchema.safeParse({
-    styleImage: formData.get('styleImage'),
-  });
-
-  if (!validatedFields.success) {
-    return {
-      status: 'error',
-      message: 'Invalid form data.',
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
-
-  try {
-    const photoDataUri = await fileToDataUri(validatedFields.data.styleImage);
-    const result = await suggestOutfitFromPhoto({ photoDataUri });
-    return {
-      status: 'success',
-      message: 'Style guide generated!',
-      result,
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      status: 'error',
-      message: 'An unexpected error occurred. Please try again.',
-    };
-  }
-}
 
 // Hairstyle Helper Action
 const suggestHairstyleSchema = z.object({

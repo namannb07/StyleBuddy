@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { suggestOutfitAction, suggestOutfitFromPhotoAction, type SuggestOutfitState } from '@/app/actions';
+import { suggestOutfitAction, type SuggestOutfitState } from '@/app/actions';
 import { SubmitButton } from '@/components/submit-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Wand, Palette, Shirt, Upload, Edit } from 'lucide-react';
@@ -23,12 +23,10 @@ const faceShapes = ['Oval', 'Round', 'Square', 'Heart', 'Diamond', 'Long'];
 const bodyShapes = ['Apple', 'Pear', 'Rectangle', 'Hourglass', 'Inverted Triangle'];
 
 export function StyleGuide() {
-  const [manualState, manualFormAction] = useActionState(suggestOutfitAction, initialState);
-  const [photoState, photoFormAction] = useActionState(suggestOutfitFromPhotoAction, initialState);
+  const [state, formAction] = useActionState(suggestOutfitAction, initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('manual');
-
-  const formRef = useRef<HTMLFormElement>(null);
+  
+  const manualFormRef = useRef<HTMLFormElement>(null);
   const photoFormRef = useRef<HTMLFormElement>(null);
 
   const { toast } = useToast();
@@ -44,35 +42,24 @@ export function StyleGuide() {
     }
   };
 
-  const activeState = activeTab === 'photo' ? photoState : manualState;
-  
   useEffect(() => {
-    if (manualState.status === 'success' || photoState.status === 'success') {
+    if (state.status === 'success') {
       toast({
         title: "Style Guide Ready!",
         description: "Your personalized suggestions are here.",
       });
-      if (manualState.status === 'success') {
-        formRef.current?.reset();
-      }
-      if (photoState.status === 'success') {
-        photoFormRef.current?.reset();
-        setImagePreview(null);
-      }
-    } else if (manualState.status === 'error' && manualState.message) {
+      manualFormRef.current?.reset();
+      photoFormRef.current?.reset();
+      setImagePreview(null);
+
+    } else if (state.status === 'error' && state.message) {
       toast({
         variant: "destructive",
         title: "Oops! Something went wrong.",
-        description: manualState.message,
-      });
-    } else if (photoState.status === 'error' && photoState.message) {
-      toast({
-        variant: "destructive",
-        title: "Oops! Something went wrong.",
-        description: photoState.message,
+        description: state.message,
       });
     }
-  }, [manualState, photoState, toast]);
+  }, [state, toast]);
 
   return (
     <Card className="w-full">
@@ -83,7 +70,7 @@ export function StyleGuide() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Tabs defaultValue="manual" className="w-full" onValueChange={setActiveTab}>
+        <Tabs defaultValue="manual" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-primary/10 p-1 h-auto rounded-lg">
              <TabsTrigger value="manual" className="py-2.5 text-sm md:text-base flex items-center gap-2 rounded-md">
                 <Edit className="w-5 h-5" />
@@ -95,7 +82,8 @@ export function StyleGuide() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="manual" className="mt-6">
-            <form ref={formRef} action={manualFormAction} className="space-y-4">
+            <form ref={manualFormRef} action={formAction} className="space-y-4">
+              <input type="hidden" name="submissionType" value="manual" />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="skinTone">Skin Tone</Label>
@@ -103,6 +91,9 @@ export function StyleGuide() {
                     <SelectTrigger id="skinTone"><SelectValue placeholder="Select your skin tone" /></SelectTrigger>
                     <SelectContent>{skinTones.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                   </Select>
+                   {state.errors?.skinTone && (
+                    <p className="text-sm text-destructive">{state.errors.skinTone[0]}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="faceShape">Face Shape</Label>
@@ -110,6 +101,9 @@ export function StyleGuide() {
                     <SelectTrigger id="faceShape"><SelectValue placeholder="Select your face shape" /></SelectTrigger>
                     <SelectContent>{faceShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
+                   {state.errors?.faceShape && (
+                    <p className="text-sm text-destructive">{state.errors.faceShape[0]}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="bodyShape">Body Shape</Label>
@@ -117,18 +111,22 @@ export function StyleGuide() {
                     <SelectTrigger id="bodyShape"><SelectValue placeholder="Select your body shape" /></SelectTrigger>
                     <SelectContent>{bodyShapes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
+                   {state.errors?.bodyShape && (
+                    <p className="text-sm text-destructive">{state.errors.bodyShape[0]}</p>
+                  )}
                 </div>
               </div>
               <SubmitButton className="w-full" pendingText="Generating...">Get My Style Guide</SubmitButton>
             </form>
           </TabsContent>
           <TabsContent value="photo" className="mt-6">
-             <form ref={photoFormRef} action={photoFormAction} className="space-y-4">
+             <form ref={photoFormRef} action={formAction} className="space-y-4">
+              <input type="hidden" name="submissionType" value="photo" />
               <div className="space-y-2">
                 <Label htmlFor="styleImage">Upload Your Photo</Label>
                 <Input id="styleImage" name="styleImage" type="file" accept="image/*" required onChange={handleImageChange} />
-                {photoState.errors?.styleImage && (
-                  <p className="text-sm text-destructive">{photoState.errors.styleImage[0]}</p>
+                {state.errors?.styleImage && (
+                  <p className="text-sm text-destructive">{state.errors.styleImage[0]}</p>
                 )}
               </div>
 
@@ -143,7 +141,7 @@ export function StyleGuide() {
           </TabsContent>
         </Tabs>
 
-        {(activeState.status === 'success' && activeState.result) && (
+        {(state.status === 'success' && state.result) && (
           <div className="grid md:grid-cols-2 gap-4 animate-in fade-in-50 pt-4">
             <Card className="bg-primary/5">
               <CardHeader>
@@ -153,7 +151,7 @@ export function StyleGuide() {
                  </div>
               </CardHeader>
               <CardContent>
-                <p className="font-body">{activeState.result.colorSuggestion}</p>
+                <p className="font-body">{state.result.colorSuggestion}</p>
               </CardContent>
             </Card>
             <Card className="bg-primary/5">
@@ -164,13 +162,13 @@ export function StyleGuide() {
                  </div>
               </CardHeader>
               <CardContent>
-                <p className="font-body">{activeState.result.outfitSuggestion}</p>
+                <p className="font-body">{state.result.outfitSuggestion}</p>
               </CardContent>
             </Card>
           </div>
         )}
 
-        {activeState.status === 'initial' && (
+        {state.status === 'initial' && (
              <Alert className="border-primary/20 bg-primary/5 text-foreground mt-6">
                 <Wand className="h-4 w-4" />
                 <AlertTitle className="font-headline">Unlock Your Style Potential</AlertTitle>
