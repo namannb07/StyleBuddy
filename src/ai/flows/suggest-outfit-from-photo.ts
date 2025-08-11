@@ -1,9 +1,7 @@
-'use server';
-
 /**
  * @fileOverview Outfit suggestion flow based on user's photo.
  *
- * - suggestOutfitFromPhoto - A function that handles the outfit suggestion process from a photo.
+ * - suggestOutfitFromPhotoFlow - A flow that handles the outfit suggestion process from a photo.
  * - SuggestOutfitFromPhotoInput - The input type for the suggestOutfitFromPhoto function.
  * - SuggestOutfitOutput - The return type for the suggestOutfitFromPhoto function.
  */
@@ -23,10 +21,6 @@ const SuggestOutfitFromPhotoInputSchema = z.object({
 });
 export type SuggestOutfitFromPhotoInput = z.infer<typeof SuggestOutfitFromPhotoInputSchema>;
 
-export async function suggestOutfitFromPhoto(input: SuggestOutfitFromPhotoInput): Promise<SuggestOutfitOutput> {
-  return suggestOutfitFromPhotoFlow(input);
-}
-
 const prompt = ai.definePrompt({
   name: 'suggestOutfitFromPhotoPrompt',
   input: {schema: SuggestOutfitFromPhotoInputSchema},
@@ -40,7 +34,7 @@ Also, provide outfit suggestions broken down into top, bottom, and wearables (e.
 `,
 });
 
-const suggestOutfitFromPhotoFlow = ai.defineFlow(
+export const suggestOutfitFromPhotoFlow = ai.defineFlow(
   {
     name: 'suggestOutfitFromPhotoFlow',
     inputSchema: SuggestOutfitFromPhotoInputSchema,

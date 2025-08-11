@@ -1,9 +1,7 @@
-'use server';
-
 /**
  * @fileOverview Outfit suggestion flow based on user's skin tone, face shape, and body shape.
  *
- * - suggestOutfit - A function that handles the outfit suggestion process.
+ * - suggestOutfitFlow - A flow that handles the outfit suggestion process.
  * - SuggestOutfitInput - The input type for the suggestOutfit function.
  * - SuggestOutfitOutput - The return type for the suggestOutfit function.
  */
@@ -24,10 +22,6 @@ const SuggestOutfitInputSchema = z.object({
 export type SuggestOutfitInput = z.infer<typeof SuggestOutfitInputSchema>;
 export type SuggestOutfitOutput = z.infer<typeof SuggestOutfitOutputSchema>;
 
-export async function suggestOutfit(input: SuggestOutfitInput): Promise<SuggestOutfitOutput> {
-  return suggestOutfitFlow(input);
-}
-
 const prompt = ai.definePrompt({
   name: 'suggestOutfitPrompt',
   input: {schema: SuggestOutfitInputSchema},
@@ -44,7 +38,7 @@ Also, provide outfit suggestions broken down into top, bottom, and wearables (e.
 `,
 });
 
-const suggestOutfitFlow = ai.defineFlow(
+export const suggestOutfitFlow = ai.defineFlow(
   {
     name: 'suggestOutfitFlow',
     inputSchema: SuggestOutfitInputSchema,

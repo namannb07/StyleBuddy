@@ -1,25 +1,36 @@
 // @/components/hairstyle-helper.tsx
 'use client';
 
-import { useEffect, useRef, useState, useActionState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { suggestHairstyleAction, type SuggestHairstyleState } from '@/app/actions';
 import { SubmitButton } from '@/components/submit-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Scissors, Sparkles, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { runFlow } from '@genkit-ai/next/client';
+import { suggestHairstyleFlow } from '@/ai/flows/suggest-hairstyle';
+import type { SuggestHairstyleOutput } from '@/ai/flows/suggest-hairstyle';
+
+type SuggestHairstyleState = {
+  status: 'initial' | 'loading' | 'success' | 'error';
+  result?: SuggestHairstyleOutput;
+  message?: string;
+  errors?: {
+    [key: string]: string[];
+  };
+};
 
 const initialState: SuggestHairstyleState = {
   status: 'initial',
 };
 
 export function HairstyleHelper() {
-  const [state, formAction] = useActionState(suggestHairstyleAction, initialState);
+  const [state, setState] = useState<SuggestHairstyleState>(initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
@@ -33,6 +44,29 @@ export function HairstyleHelper() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setState({ status: 'loading' });
+    const formData = new FormData(event.currentTarget);
+    const file = formData.get('faceImage') as File;
+    const gender = formData.get('gender') as 'male' | 'female';
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const photoDataUri = reader.result as string;
+      try {
+        const result = await runFlow<typeof suggestHairstyleFlow>({
+          url: '/api/suggest-hairstyle',
+          input: { photoDataUri, gender },
+        });
+        setState({ status: 'success', result });
+      } catch (error) {
+        setState({ status: 'error', message: (error as Error).message });
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   useEffect(() => {
@@ -61,7 +95,7 @@ export function HairstyleHelper() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <form ref={formRef} action={formAction} className="space-y-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4 items-start">
               <div className="space-y-2">
                 <Label htmlFor="faceImage">Upload Your Face Photo</Label>

@@ -1,9 +1,7 @@
-'use server';
-
 /**
  * @fileOverview An outfit rating AI agent.
  *
- * - rateOutfit - A function that handles the outfit rating process.
+ * - rateOutfitFlow - A flow that handles the outfit rating process.
  * - RateOutfitInput - The input type for the rateOutfit function.
  * - RateOutfitOutput - The return type for the rateOutfit function.
  */
@@ -28,10 +26,6 @@ const RateOutfitOutputSchema = z.object({
 });
 export type RateOutfitOutput = z.infer<typeof RateOutfitOutputSchema>;
 
-export async function rateOutfit(input: RateOutfitInput): Promise<RateOutfitOutput> {
-  return rateOutfitFlow(input);
-}
-
 const prompt = ai.definePrompt({
   name: 'rateOutfitPrompt',
   input: {schema: RateOutfitInputSchema},
@@ -46,7 +40,7 @@ Here is the photo of the outfit:
 `,
 });
 
-const rateOutfitFlow = ai.defineFlow(
+export const rateOutfitFlow = ai.defineFlow(
   {
     name: 'rateOutfitFlow',
     inputSchema: RateOutfitInputSchema,
