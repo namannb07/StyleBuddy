@@ -1,24 +1,35 @@
 // @/components/outfit-rater.tsx
 'use client';
 
-import { useEffect, useRef, useState, useActionState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { rateOutfitAction, type RateOutfitState } from '@/app/actions';
 import { SubmitButton } from '@/components/submit-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Camera, ThumbsUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { runFlow } from '@genkit-ai/next/client';
+import { rateOutfitFlow } from '@/ai/flows/rate-outfit';
+import type { RateOutfitOutput } from '@/ai/flows/rate-outfit';
+
+type RateOutfitState = {
+  status: 'initial' | 'loading' | 'success' | 'error';
+  result?: RateOutfitOutput;
+  message?: string;
+  errors?: {
+    [key: string]: string[];
+  };
+};
 
 const initialState: RateOutfitState = {
   status: 'initial',
 };
 
 export function OutfitRater() {
-  const [state, formAction] = useActionState(rateOutfitAction, initialState);
+  const [state, setState] = useState<RateOutfitState>(initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
@@ -34,6 +45,28 @@ export function OutfitRater() {
     }
   };
   
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setState({ status: 'loading' });
+    const formData = new FormData(event.currentTarget);
+    const file = formData.get('outfitImage') as File;
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const photoDataUri = reader.result as string;
+      try {
+        const result = await runFlow<typeof rateOutfitFlow>({
+          url: '/api/rate-outfit',
+          input: { photoDataUri },
+        });
+        setState({ status: 'success', result });
+      } catch (error) {
+        setState({ status: 'error', message: (error as Error).message });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   useEffect(() => {
     if (state.status === 'success') {
       toast({
@@ -60,7 +93,7 @@ export function OutfitRater() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <form action={formAction} ref={formRef} className="space-y-4">
+        <form onSubmit={handleSubmit} ref={formRef} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="outfitImage">Upload Your Outfit Photo</Label>
             <Input id="outfitImage" name="outfitImage" type="file" accept="image/*" required onChange={handleImageChange} />

@@ -1,19 +1,31 @@
 // @/components/style-guide.tsx
 'use client';
 
-import { useEffect, useRef, useState, useActionState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { suggestOutfitAction, type SuggestOutfitState } from '@/app/actions';
 import { SubmitButton } from '@/components/submit-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Wand, Palette, Shirt, Upload, Edit, Glasses, CaseUpper } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { runFlow } from '@genkit-ai/next/client';
+import { suggestOutfitFlow } from '@/ai/flows/suggest-outfit';
+import { suggestOutfitFromPhotoFlow } from '@/ai/flows/suggest-outfit-from-photo';
+import type { SuggestOutfitOutput } from '@/ai/flows/suggest-outfit';
+
+type SuggestOutfitState = {
+  status: 'initial' | 'loading' | 'success' | 'error';
+  result?: SuggestOutfitOutput;
+  message?: string;
+  errors?: {
+    [key: string]: string[];
+  };
+};
 
 const initialState: SuggestOutfitState = {
   status: 'initial',
@@ -24,7 +36,7 @@ const faceShapes = ['Oval', 'Round', 'Square', 'Heart', 'Diamond', 'Long'];
 const bodyShapes = ['Apple', 'Pear', 'Rectangle', 'Hourglass', 'Inverted Triangle'];
 
 export function StyleGuide() {
-  const [state, formAction] = useActionState(suggestOutfitAction, initialState);
+  const [state, setState] = useState<SuggestOutfitState>(initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('manual');
   
@@ -41,6 +53,43 @@ export function StyleGuide() {
       reader.readAsDataURL(file);
     } else {
       setImagePreview(null);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setState({ status: 'loading' });
+    const formData = new FormData(event.currentTarget);
+    const submissionType = formData.get('submissionType') as string;
+
+    try {
+      if (submissionType === 'manual') {
+        const input = {
+          skinTone: formData.get('skinTone') as string,
+          faceShape: formData.get('faceShape') as string,
+          bodyShape: formData.get('bodyShape') as string,
+          gender: formData.get('gender') as 'male' | 'female',
+        };
+        const result = await runFlow<typeof suggestOutfitFlow>({
+          url: '/api/suggest-outfit',
+          input,
+        });
+        setState({ status: 'success', result });
+      } else {
+        const file = formData.get('styleImage') as File;
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const photoDataUri = reader.result as string;
+          const result = await runFlow<typeof suggestOutfitFromPhotoFlow>({
+            url: '/api/suggest-outfit-from-photo',
+            input: { photoDataUri },
+          });
+          setState({ status: 'success', result });
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (error) {
+      setState({ status: 'error', message: (error as Error).message });
     }
   };
 
@@ -71,7 +120,7 @@ export function StyleGuide() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-       <form ref={formRef} action={formAction}>
+       <form ref={formRef} onSubmit={handleSubmit}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-primary/10 p-1 h-auto rounded-lg">
              <TabsTrigger value="manual" className="py-2.5 text-sm md:text-base flex items-center gap-2 rounded-md transition-all duration-300">
