@@ -2,12 +2,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { SubmitButton } from '@/components/submit-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Scissors, Sparkles, User } from 'lucide-react';
@@ -31,20 +29,8 @@ const initialState: SuggestHairstyleState = {
 
 export function HairstyleHelper() {
   const [state, setState] = useState<SuggestHairstyleState>(initialState);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
-  
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -76,7 +62,6 @@ export function HairstyleHelper() {
         description: "Check out your personalized hairstyle suggestions.",
       });
       formRef.current?.reset();
-      setImagePreview(null);
     } else if (state.status === 'error' && state.message) {
       toast({
         variant: "destructive",
@@ -99,7 +84,7 @@ export function HairstyleHelper() {
           <div className="grid md:grid-cols-2 gap-4 items-start">
               <div className="space-y-2">
                 <Label htmlFor="faceImage">Upload Your Face Photo</Label>
-                <Input id="faceImage" name="faceImage" type="file" accept="image/*" required onChange={handleImageChange} />
+                <Input id="faceImage" name="faceImage" type="file" accept="image/*" required />
                 {state.errors?.faceImage && (
                   <p className="text-sm text-destructive">{state.errors.faceImage[0]}</p>
                 )}
@@ -122,12 +107,6 @@ export function HairstyleHelper() {
               </div>
           </div>
 
-          {imagePreview && (
-            <div className="relative w-48 h-48 mx-auto rounded-full overflow-hidden border-4 border-dashed border-primary/50">
-              <Image src={imagePreview} alt="Face preview" layout="fill" objectFit="cover" />
-            </div>
-          )}
-
           <SubmitButton className="w-full" pendingText="Analyzing..." pending={state.status === 'loading'}>Suggest Hairstyles</SubmitButton>
         </form>
 
@@ -141,26 +120,14 @@ export function HairstyleHelper() {
               <CardDescription className="font-body !mt-2">Based on your <span className="font-bold text-primary">{state.result.faceShape.toLowerCase()}</span> face shape, here are some styles you might love:</CardDescription>
             </CardHeader>
             <CardContent>
-              <Carousel className="w-full max-w-xs sm:max-w-md md:max-w-lg mx-auto">
-                <CarouselContent>
-                  {state.result.suggestedHairstyles.map((style, index) => (
-                    <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                      <div className="p-1">
-                        <Card>
-                          <CardContent className="flex flex-col items-center justify-center p-2 gap-2">
-                            <div className="relative w-full aspect-square rounded-md overflow-hidden">
-                               <Image src={state.result.referencePhotos?.[index] || `https://placehold.co/400x400.png`} data-ai-hint="hairstyle portrait" alt={style} layout="fill" objectFit="cover" />
-                            </div>
-                            <span className="text-sm text-center font-semibold font-headline">{style}</span>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-              </Carousel>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {state.result.suggestedHairstyles.map((style, index) => (
+                  <Card key={index} className="bg-secondary/40 p-4 flex flex-col items-center justify-center text-center">
+                    <Scissors className="w-8 h-8 text-secondary-foreground mb-2" />
+                    <p className="font-headline text-lg text-secondary-foreground">{style}</p>
+                  </Card>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}
