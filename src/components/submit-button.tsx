@@ -7,10 +7,12 @@ import { Loader2 } from 'lucide-react';
 
 type Props = ButtonProps & {
     pendingText?: string;
+    pending?: boolean;
 };
 
-export function SubmitButton({ children, pendingText, ...props }: Props) {
-  const { pending } = useFormStatus();
+export function SubmitButton({ children, pendingText, pending: pendingProp, ...props }: Props) {
+  const { pending: formStatusPending } = useFormStatus();
+  const pending = pendingProp !== undefined ? pendingProp : formStatusPending;
 
   return (
     <Button {...props} type="submit" disabled={pending} aria-disabled={pending}>
