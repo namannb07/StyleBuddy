@@ -108,7 +108,7 @@ export function OutfitRater() {
             </div>
           )}
 
-          <SubmitButton className="w-full" pendingText="Rating...">Rate My Outfit</SubmitButton>
+          <SubmitButton className="w-full" pendingText="Rating..." pending={state.status === 'loading'}>Rate My Outfit</SubmitButton>
         </form>
 
         {state.status === 'success' && state.result && (
