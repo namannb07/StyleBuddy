@@ -26,19 +26,16 @@ const SuggestHairstyleOutputSchema = z.object({
   suggestedHairstyles: z
     .array(z.string())
     .describe('A list of suggested hairstyles based on the face shape and gender.'),
-  referencePhotos: z
-    .array(z.string())
-    .describe('A list of data URIs of reference photos for the suggested hairstyles.'),
 });
 export type SuggestHairstyleOutput = z.infer<typeof SuggestHairstyleOutputSchema>;
 
-const prompt = ai.definePrompt({
-  name: 'suggestHairstylePrompt',
+const hairstyleSuggestionPrompt = ai.definePrompt({
+  name: 'hairstyleSuggestionPrompt',
   input: {schema: SuggestHairstyleInputSchema},
   output: {schema: SuggestHairstyleOutputSchema},
   prompt: `You are a professional hairstylist. Based on the user's face shape and gender, you will suggest a list of hairstyles that would suit them.
 
-Analyze the provided photo to determine the face shape, and then suggest hairstyles accordingly. Include reference photo data URIs for each suggested hairstyle if possible.
+Analyze the provided photo to determine the face shape, and then suggest hairstyles accordingly.
 
 Photo: {{media url=photoDataUri}}
 Gender: {{gender}}
@@ -52,8 +49,12 @@ export const suggestHairstyleFlow = ai.defineFlow(
     inputSchema: SuggestHairstyleInputSchema,
     outputSchema: SuggestHairstyleOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async (input) => {
+    const suggestionResponse = await hairstyleSuggestionPrompt(input);
+    const suggestions = suggestionResponse.output;
+    if (!suggestions) {
+      throw new Error('Failed to generate hairstyle suggestions.');
+    }
+    return suggestions;
   }
 );
