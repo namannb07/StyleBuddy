@@ -128,7 +128,7 @@ export function HairstyleHelper() {
             </div>
           )}
 
-          <SubmitButton className="w-full" pendingText="Analyzing...">Suggest Hairstyles</SubmitButton>
+          <SubmitButton className="w-full" pendingText="Analyzing..." pending={state.status === 'loading'}>Suggest Hairstyles</SubmitButton>
         </form>
 
         {state.status === 'success' && state.result && (

@@ -201,7 +201,7 @@ export function StyleGuide() {
                 )}
             </TabsContent>
         </Tabs>
-        <SubmitButton className="w-full mt-4" pendingText={activeTab === 'manual' ? "Generating..." : "Analyzing..."}>Get My Style Guide</SubmitButton>
+        <SubmitButton className="w-full mt-4" pendingText={activeTab === 'manual' ? "Generating..." : "Analyzing..."} pending={state.status === 'loading'}>Get My Style Guide</SubmitButton>
         </form>
 
         {(state.status === 'success' && state.result) && (
