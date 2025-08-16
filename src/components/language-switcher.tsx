@@ -38,10 +38,10 @@ export function LanguageSwitcher() {
           English
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => onSelectChange('es')}
-          disabled={localeActive === 'es'}
+          onClick={() => onSelectChange('hi')}
+          disabled={localeActive === 'hi'}
         >
-          Español
+          हिन्दी
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
