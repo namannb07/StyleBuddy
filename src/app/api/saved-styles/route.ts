@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         savedStyle: {
-          id: savedStyle._id.toString(),
+          id: String(savedStyle._id),
           imageUrl: savedStyle.imageUrl,
           feedback: savedStyle.feedback,
           suggestions: savedStyle.suggestions,
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       savedStyles: savedStyles.map((style) => ({
-        id: style._id.toString(),
+        id: String(style._id),
         imageUrl: style.imageUrl,
         feedback: style.feedback,
         suggestions: style.suggestions,
