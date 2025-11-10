@@ -8,8 +8,11 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { SubmitButton } from '@/components/submit-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Scissors, Sparkles, User } from 'lucide-react';
+import { Scissors, Sparkles, User, Bookmark } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { saveStyle } from '@/lib/saveStyle';
+import { Button } from '@/components/ui/button';
 import { runFlow } from '@genkit-ai/next/client';
 import { suggestHairstyleFlow } from '@/ai/flows/suggest-hairstyle';
 import type { SuggestHairstyleOutput } from '@/ai/flows/suggest-hairstyle';
@@ -29,8 +32,11 @@ const initialState: SuggestHairstyleState = {
 
 export function HairstyleHelper() {
   const [state, setState] = useState<SuggestHairstyleState>(initialState);
+  const [savedImageUrl, setSavedImageUrl] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
+  const { isAuthenticated, token } = useAuth();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -42,6 +48,7 @@ export function HairstyleHelper() {
     const reader = new FileReader();
     reader.onloadend = async () => {
       const photoDataUri = reader.result as string;
+      setSavedImageUrl(photoDataUri); // Store for saving
       try {
         const result = await runFlow<typeof suggestHairstyleFlow>({
           url: '/api/suggest-hairstyle',
@@ -113,9 +120,45 @@ export function HairstyleHelper() {
         {state.status === 'success' && state.result && (
           <Card className="bg-primary/5 animate-in fade-in-50">
             <CardHeader>
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-6 h-6 text-primary" />
-                <CardTitle className="font-headline text-xl">Your Hairstyle Suggestions</CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                  <CardTitle className="font-headline text-xl">Your Hairstyle Suggestions</CardTitle>
+                </div>
+                {isAuthenticated && savedImageUrl && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      setIsSaving(true);
+                      const result = await saveStyle(
+                        {
+                          imageUrl: savedImageUrl,
+                          feedback: `Face shape: ${state.result!.faceShape}. ${state.result!.suggestedHairstyles.length} hairstyle suggestions.`,
+                          suggestions: state.result!.suggestedHairstyles.join('\n'),
+                        },
+                        token
+                      );
+                      setIsSaving(false);
+                      if (result.success) {
+                        toast({
+                          title: 'Style Saved!',
+                          description: 'Your hairstyle suggestions have been saved to your collection.',
+                        });
+                      } else {
+                        toast({
+                          variant: 'destructive',
+                          title: 'Failed to save',
+                          description: result.error || 'Could not save style',
+                        });
+                      }
+                    }}
+                    disabled={isSaving}
+                  >
+                    <Bookmark className="w-4 h-4 mr-2" />
+                    {isSaving ? 'Saving...' : 'Save Style'}
+                  </Button>
+                )}
               </div>
               <CardDescription className="font-body !mt-2">Based on your <span className="font-bold text-primary">{state.result.faceShape.toLowerCase()}</span> face shape, here are some styles you might love:</CardDescription>
             </CardHeader>

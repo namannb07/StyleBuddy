@@ -9,8 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from '@/components/submit-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Wand, Palette, Shirt, Upload, Edit, Glasses, CaseUpper } from 'lucide-react';
+import { Wand, Palette, Shirt, Upload, Edit, Glasses, CaseUpper, Bookmark } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { saveStyle } from '@/lib/saveStyle';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { runFlow } from '@genkit-ai/next/client';
@@ -38,10 +41,13 @@ const bodyShapes = ['Apple', 'Pear', 'Rectangle', 'Hourglass', 'Inverted Triangl
 export function StyleGuide() {
   const [state, setState] = useState<SuggestOutfitState>(initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [savedImageUrl, setSavedImageUrl] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('manual');
   
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
+  const { isAuthenticated, token } = useAuth();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -80,6 +86,7 @@ export function StyleGuide() {
         const reader = new FileReader();
         reader.onloadend = async () => {
           const photoDataUri = reader.result as string;
+          setSavedImageUrl(photoDataUri); // Store for saving
           const result = await runFlow<typeof suggestOutfitFromPhotoFlow>({
             url: '/api/suggest-outfit-from-photo',
             input: { photoDataUri },
@@ -206,6 +213,43 @@ export function StyleGuide() {
 
         {(state.status === 'success' && state.result) && (
           <div className="space-y-6 animate-in fade-in-50 pt-4">
+            {isAuthenticated && (savedImageUrl || activeTab === 'manual') && (
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    setIsSaving(true);
+                    const suggestions = `Colors: ${state.result!.colorPalette.join(', ')}\nTop: ${state.result!.outfitSuggestion.top}\nBottom: ${state.result!.outfitSuggestion.bottom}\nWearables: ${state.result!.outfitSuggestion.wearables}`;
+                    const result = await saveStyle(
+                      {
+                        imageUrl: savedImageUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzMzMzMzMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TdHlsZSBHdWlkZTwvdGV4dD48L3N2Zz4=',
+                        feedback: `Personalized style guide with ${state.result!.colorPalette.length} color recommendations`,
+                        suggestions,
+                      },
+                      token
+                    );
+                    setIsSaving(false);
+                    if (result.success) {
+                      toast({
+                        title: 'Style Saved!',
+                        description: 'Your style guide has been saved to your collection.',
+                      });
+                    } else {
+                      toast({
+                        variant: 'destructive',
+                        title: 'Failed to save',
+                        description: result.error || 'Could not save style',
+                      });
+                    }
+                  }}
+                  disabled={isSaving}
+                >
+                  <Bookmark className="w-4 h-4 mr-2" />
+                  {isSaving ? 'Saving...' : 'Save Style'}
+                </Button>
+              </div>
+            )}
             <Card className="bg-primary/5">
               <CardHeader>
                  <div className="flex items-center gap-2">

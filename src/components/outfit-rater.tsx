@@ -9,11 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { SubmitButton } from '@/components/submit-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Camera, ThumbsUp } from 'lucide-react';
+import { Camera, ThumbsUp, Bookmark } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { runFlow } from '@genkit-ai/next/client';
 import { rateOutfitFlow } from '@/ai/flows/rate-outfit';
 import type { RateOutfitOutput } from '@/ai/flows/rate-outfit';
+import { useAuth } from '@/contexts/AuthContext';
+import { saveStyle } from '@/lib/saveStyle';
+import { Button } from '@/components/ui/button';
 
 type RateOutfitState = {
   status: 'initial' | 'loading' | 'success' | 'error';
@@ -31,8 +34,11 @@ const initialState: RateOutfitState = {
 export function OutfitRater() {
   const [state, setState] = useState<RateOutfitState>(initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [savedImageUrl, setSavedImageUrl] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
+  const { isAuthenticated, token } = useAuth();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,6 +60,7 @@ export function OutfitRater() {
     const reader = new FileReader();
     reader.onloadend = async () => {
       const photoDataUri = reader.result as string;
+      setSavedImageUrl(photoDataUri); // Store for saving
       try {
         const result = await runFlow<typeof rateOutfitFlow>({
           url: '/api/rate-outfit',
@@ -73,8 +80,6 @@ export function OutfitRater() {
         title: "Rating Complete!",
         description: "Your outfit has been rated by StyleBuddy.",
       });
-      formRef.current?.reset();
-      setImagePreview(null);
     } else if (state.status === 'error' && state.message) {
       toast({
         variant: "destructive",
@@ -114,9 +119,45 @@ export function OutfitRater() {
         {state.status === 'success' && state.result && (
           <Card className="bg-primary/5 animate-in fade-in-50">
             <CardHeader>
-              <div className="flex items-center gap-2">
-                <ThumbsUp className="w-6 h-6 text-primary" />
-                <CardTitle className="font-headline text-xl">Your Rating Is In!</CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ThumbsUp className="w-6 h-6 text-primary" />
+                  <CardTitle className="font-headline text-xl">Your Rating Is In!</CardTitle>
+                </div>
+                {isAuthenticated && savedImageUrl && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      setIsSaving(true);
+                      const result = await saveStyle(
+                        {
+                          imageUrl: savedImageUrl,
+                          feedback: state.result!.feedback,
+                          suggestions: `Rating: ${state.result!.rating.toFixed(1)}/10`,
+                        },
+                        token
+                      );
+                      setIsSaving(false);
+                      if (result.success) {
+                        toast({
+                          title: 'Style Saved!',
+                          description: 'Your outfit rating has been saved to your collection.',
+                        });
+                      } else {
+                        toast({
+                          variant: 'destructive',
+                          title: 'Failed to save',
+                          description: result.error || 'Could not save style',
+                        });
+                      }
+                    }}
+                    disabled={isSaving}
+                  >
+                    <Bookmark className="w-4 h-4 mr-2" />
+                    {isSaving ? 'Saving...' : 'Save Style'}
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
