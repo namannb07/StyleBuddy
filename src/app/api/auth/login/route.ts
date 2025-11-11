@@ -8,7 +8,16 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+
     const { email, password } = body;
 
     // Validation
@@ -58,11 +67,16 @@ export async function POST(request: NextRequest) {
     const message =
       error instanceof Error ? error.message : 'Internal server error';
     const isEnvError = message.toLowerCase().includes('environment variable');
+    const isMongoError = message.toLowerCase().includes('mongodb') || message.toLowerCase().includes('connection');
 
     return NextResponse.json(
       {
         error: isEnvError
           ? 'Server configuration error: missing environment variables'
+          : isMongoError
+          ? 'Database connection error. Please try again later.'
+          : message.includes('JWT_SECRET')
+          ? 'Server configuration error: missing JWT secret'
           : 'Internal server error',
       },
       { status: 500 }
