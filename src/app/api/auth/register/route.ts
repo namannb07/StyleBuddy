@@ -65,8 +65,17 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error('Registration error:', error);
+
+    const message =
+      error instanceof Error ? error.message : 'Internal server error';
+    const isEnvError = message.toLowerCase().includes('environment variable');
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: isEnvError
+          ? 'Server configuration error: missing environment variables'
+          : 'Internal server error',
+      },
       { status: 500 }
     );
   }

@@ -32,10 +32,33 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data:
+        | {
+            error?: string;
+            token?: string;
+            user?: { name: string; email: string; id: string };
+          }
+        | null = null;
+
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse login response:', parseError, responseText);
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+        const message =
+          data?.error ||
+          response.statusText ||
+          (responseText ? responseText.trim() : 'Login failed');
+        throw new Error(message);
+      }
+
+      if (!data?.token || !data?.user) {
+        throw new Error('Unexpected server response');
       }
 
       login(data.token, data.user);
