@@ -6,13 +6,13 @@
 
 **Your personal AI-powered style assistant. Get instant feedback on your outfits, personalized style guidance, and hairstyle suggestions.**
 
-[Features](#-features) â€¢ [Installation](#-installation) â€¢ [Documentation](#-documentation) â€¢ [Tech Stack](#-tech-stack)
+[Features](#-features)  [Installation](#-installation)  [Documentation](#-documentation)  [Tech Stack](#-tech-stack)
 
 </div>
 
 ---
 
-## ðŸ“‹ Table of Contents
+## Table of Contents
 
 - [About The Project](#-about-the-project)
 - [Features](#-features)
@@ -34,7 +34,7 @@
 
 ---
 
-## ðŸŽ¯ About The Project
+##  About The Project
 
 StyleBuddy is a modern, full-stack web application that leverages AI to provide personalized fashion and style recommendations. Built with Next.js 15 and powered by Google's Genkit AI framework, it offers three core features:
 
@@ -46,17 +46,17 @@ The application features a complete authentication system, user profile manageme
 
 ---
 
-## âœ¨ Features
+##  Features
 
 ### Core Features
 
-- **ðŸŽ¨ Outfit Rater**
+- ** Outfit Rater**
   - Upload full-body outfit photos
   - Receive AI-generated ratings (1-10 scale)
   - Get detailed, constructive feedback
   - Save ratings to your collection
 
-- **ðŸ‘” Style Guide**
+- ** Style Guide**
   - Two input methods:
     - Manual entry (skin tone, face shape, body shape, gender)
     - Photo analysis (AI automatically detects features)
@@ -64,7 +64,7 @@ The application features a complete authentication system, user profile manageme
   - Detailed outfit suggestions (top, bottom, wearables)
   - Save recommendations for later
 
-- **ðŸ’‡ Hairstyle Helper**
+- ** Hairstyle Helper**
   - Upload face photos for analysis
   - AI detects face shape automatically
   - Gender-specific hairstyle recommendations
@@ -72,19 +72,19 @@ The application features a complete authentication system, user profile manageme
 
 ### Additional Features
 
-- **ðŸ” User Authentication**
+- ** User Authentication**
   - Secure registration and login
   - JWT-based session management
   - Protected routes and API endpoints
   - Persistent sessions via localStorage
 
-- **ðŸ’¾ Saved Styles Collection**
+- ** Saved Styles Collection**
   - Save favorite outfit ratings and style recommendations
   - View all saved styles in a beautiful grid layout
   - Delete saved styles with confirmation dialogs
   - Color swatches displayed instead of hex codes
 
-- **ðŸŽ¨ Modern UI/UX**
+- ** Modern UI/UX**
   - Responsive design (mobile, tablet, desktop)
   - Beautiful color scheme (violet/magenta theme)
   - Smooth animations and transitions
@@ -93,7 +93,7 @@ The application features a complete authentication system, user profile manageme
 
 ---
 
-## ðŸ›  Tech Stack
+##   Tech Stack
 
 ### Frontend
 - **Framework**: [Next.js 15.3.3](https://nextjs.org/) (App Router)
