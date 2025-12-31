@@ -29,6 +29,7 @@ const SuggestHairstyleOutputSchema = z.object({
 });
 export type SuggestHairstyleOutput = z.infer<typeof SuggestHairstyleOutputSchema>;
 
+/*
 const hairstyleSuggestionPrompt = ai.definePrompt({
   name: 'hairstyleSuggestionPrompt',
   input: {schema: SuggestHairstyleInputSchema},
@@ -56,5 +57,26 @@ export const suggestHairstyleFlow = ai.defineFlow(
       throw new Error('Failed to generate hairstyle suggestions.');
     }
     return suggestions;
+  }
+);
+*/
+
+export const suggestHairstyleFlow = ai.defineFlow(
+  {
+    name: 'suggestHairstyleFlow',
+    inputSchema: SuggestHairstyleInputSchema,
+    outputSchema: SuggestHairstyleOutputSchema,
+  },
+  async (input) => {
+    // Return static data for demonstration purposes
+    return {
+      faceShape: 'Oval',
+      suggestedHairstyles: [
+        'Side Part',
+        'Pompadour',
+        'Fringe',
+        'Quiff',
+      ],
+    };
   }
 );

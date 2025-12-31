@@ -21,6 +21,7 @@ const SuggestOutfitFromPhotoInputSchema = z.object({
 });
 export type SuggestOutfitFromPhotoInput = z.infer<typeof SuggestOutfitFromPhotoInputSchema>;
 
+/*
 const prompt = ai.definePrompt({
   name: 'suggestOutfitFromPhotoPrompt',
   input: {schema: SuggestOutfitFromPhotoInputSchema},
@@ -43,5 +44,25 @@ export const suggestOutfitFromPhotoFlow = ai.defineFlow(
   async input => {
     const {output} = await prompt(input);
     return output!;
+  }
+);
+*/
+
+export const suggestOutfitFromPhotoFlow = ai.defineFlow(
+  {
+    name: 'suggestOutfitFromPhotoFlow',
+    inputSchema: SuggestOutfitFromPhotoInputSchema,
+    outputSchema: SuggestOutfitOutputSchema,
+  },
+  async input => {
+    // Return static data for demonstration purposes
+    return {
+      colorPalette: ['#2d2d2d', '#f7f7f7', '#c7c7c7', '#a3a3a3', '#dcdcdc'],
+      outfitSuggestion: {
+        top: 'A classic white t-shirt or a black turtleneck.',
+        bottom: 'Slim-fit dark wash jeans or black chinos.',
+        wearables: 'A silver watch and a pair of classic aviator sunglasses.',
+      },
+    };
   }
 );

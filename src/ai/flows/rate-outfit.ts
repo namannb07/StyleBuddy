@@ -26,6 +26,7 @@ const RateOutfitOutputSchema = z.object({
 });
 export type RateOutfitOutput = z.infer<typeof RateOutfitOutputSchema>;
 
+/*
 const prompt = ai.definePrompt({
   name: 'rateOutfitPrompt',
   input: {schema: RateOutfitInputSchema},
@@ -49,5 +50,21 @@ export const rateOutfitFlow = ai.defineFlow(
   async input => {
     const {output} = await prompt(input);
     return output!;
+  }
+);
+*/
+
+export const rateOutfitFlow = ai.defineFlow(
+  {
+    name: 'rateOutfitFlow',
+    inputSchema: RateOutfitInputSchema,
+    outputSchema: RateOutfitOutputSchema,
+  },
+  async input => {
+    // Return static data for demonstration purposes
+    return {
+      rating: 8,
+      feedback: 'This is a fantastic outfit! The colors complement each other perfectly, and the fit is impeccable. To elevate it even further, you might consider adding a statement accessory, such as a bold necklace or a stylish watch.',
+    };
   }
 );
